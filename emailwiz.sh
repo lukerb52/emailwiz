@@ -33,10 +33,41 @@
 # On installation of Postfix, select "Internet Site" and put in TLD (without
 # `mail.` before it).
 
+#---------------------------
+# This part is by Luke Bubar <lukebubar.xyz>. I am trying to add compatibility for Arch Linux. I will seperate out the major sections with these hyphens/tics
+
+declare -i shell_check=0
+declare -i distro=0
+
+echo "What distribution is this system using?\n
+1) Arch (or Arch derivatives like Artix)\n
+2) Debian (or Debian derivatives like Ubuntu)\n"
+
+read distro
+
+while [ $shell_check -ne 1 ]
+do
+	if [ "$distro" -eq 1 -o "$distro" -eq 2 ]
+	then
+		declare -i shell_check=1
+	else
+		echo "That doesn't look like a 1 or a 2."
+
+		read distro
+	fi
+done
+
+#---------------------
+
 echo "Installing programs..."
-apt install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
-# Check if OpenDKIM is installed and install it if not.
-which opendkim-genkey >/dev/null 2>&1 || apt install opendkim-tools
+if [ $distro -eq 1 ]
+then
+	pacman -S --noconfirm postfix dovecot opendkim spamassasin spamassasin-spamc
+else
+	apt install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
+	# Check if OpenDKIM is installed and install it if not.
+	which opendkim-genkey >/dev/null 2>&1 || apt install opendkim-tools
+fi
 domain="$(cat /etc/mailname)"
 subdom="mail"
 maildomain="$subdom.$domain"
@@ -94,18 +125,18 @@ sed -i "/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d" /etc/postfix/master.cf
 
 echo "smtp unix - - n - - smtp
 smtp inet n - y - - smtpd
-  -o content_filter=spamassassin
+-o content_filter=spamassassin
 submission inet n       -       y       -       -       smtpd
-  -o syslog_name=postfix/submission
-  -o smtpd_tls_security_level=encrypt
-  -o smtpd_sasl_auth_enable=yes
-  -o smtpd_tls_auth_only=yes
+-o syslog_name=postfix/submission
+-o smtpd_tls_security_level=encrypt
+-o smtpd_sasl_auth_enable=yes
+-o smtpd_tls_auth_only=yes
 smtps     inet  n       -       y       -       -       smtpd
-  -o syslog_name=postfix/smtps
-  -o smtpd_tls_wrappermode=yes
-  -o smtpd_sasl_auth_enable=yes
+-o syslog_name=postfix/smtps
+-o smtpd_tls_wrappermode=yes
+-o smtpd_sasl_auth_enable=yes
 spamassassin unix -     n       n       -       -       pipe
-  user=debian-spamd argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}" >> /etc/postfix/master.cf
+user=debian-spamd argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}" >> /etc/postfix/master.cf
 
 
 # By default, dovecot has a bunch of configs in /etc/dovecot/conf.d/ These
@@ -135,63 +166,63 @@ protocols = \$protocols imap
 
 # Search for valid users in /etc/passwd
 userdb {
-	driver = passwd
+driver = passwd
 }
 #Fallback: Use plain old PAM to find user passwords
 passdb {
-	driver = pam
+driver = pam
 }
 
 # Our mail for each user will be in ~/Mail, and the inbox will be ~/Mail/Inbox
 # The LAYOUT option is also important because otherwise, the boxes will be \`.Sent\` instead of \`Sent\`.
 mail_location = maildir:~/Mail:INBOX=~/Mail/Inbox:LAYOUT=fs
 namespace inbox {
-	inbox = yes
-	mailbox Drafts {
-	special_use = \\Drafts
-	auto = subscribe
+inbox = yes
+mailbox Drafts {
+special_use = \\Drafts
+auto = subscribe
 }
-	mailbox Junk {
-	special_use = \\Junk
-	auto = subscribe
-	autoexpunge = 30d
+mailbox Junk {
+special_use = \\Junk
+auto = subscribe
+autoexpunge = 30d
 }
-	mailbox Sent {
-	special_use = \\Sent
-	auto = subscribe
+mailbox Sent {
+special_use = \\Sent
+auto = subscribe
 }
-	mailbox Trash {
-	special_use = \\Trash
+mailbox Trash {
+special_use = \\Trash
 }
-	mailbox Archive {
-	special_use = \\Archive
+mailbox Archive {
+special_use = \\Archive
 }
 }
 
 # Here we let Postfix use Dovecot's authetication system.
 
 service auth {
-  unix_listener /var/spool/postfix/private/auth {
-	mode = 0660
-	user = postfix
-	group = postfix
+unix_listener /var/spool/postfix/private/auth {
+mode = 0660
+user = postfix
+group = postfix
 }
 }
 
 protocol lda {
-  mail_plugins = \$mail_plugins sieve
+mail_plugins = \$mail_plugins sieve
 }
 
 protocol lmtp {
-  mail_plugins = \$mail_plugins sieve
+mail_plugins = \$mail_plugins sieve
 }
 
 plugin {
-	sieve = ~/.dovecot.sieve
-	sieve_default = /var/lib/dovecot/sieve/default.sieve
-	#sieve_global_path = /var/lib/dovecot/sieve/default.sieve
-	sieve_dir = ~/.sieve
-	sieve_global_dir = /var/lib/dovecot/sieve/
+sieve = ~/.dovecot.sieve
+sieve_default = /var/lib/dovecot/sieve/default.sieve
+#sieve_global_path = /var/lib/dovecot/sieve/default.sieve
+sieve_dir = ~/.sieve
+sieve_global_dir = /var/lib/dovecot/sieve/
 }
 " > /etc/dovecot/dovecot.conf
 
@@ -209,8 +240,8 @@ sievec /var/lib/dovecot/sieve/default.sieve
 
 echo "Preparing user authetication..."
 grep -q nullok /etc/pam.d/dovecot ||
-echo "auth    required        pam_unix.so nullok
-account required        pam_unix.so" >> /etc/pam.d/dovecot
+	echo "auth    required        pam_unix.so nullok
+	account required        pam_unix.so" >> /etc/pam.d/dovecot
 
 # OpenDKIM
 
@@ -234,15 +265,15 @@ chmod g+r /etc/postfix/dkim/*
 # Generate the OpenDKIM info:
 echo "Configuring OpenDKIM..."
 grep -q "$domain" /etc/postfix/dkim/keytable 2>/dev/null ||
-echo "$subdom._domainkey.$domain $domain:mail:/etc/postfix/dkim/mail.private" >> /etc/postfix/dkim/keytable
+	echo "$subdom._domainkey.$domain $domain:mail:/etc/postfix/dkim/mail.private" >> /etc/postfix/dkim/keytable
 
 grep -q "$domain" /etc/postfix/dkim/signingtable 2>/dev/null ||
-echo "*@$domain $subdom._domainkey.$domain" >> /etc/postfix/dkim/signingtable
+	echo "*@$domain $subdom._domainkey.$domain" >> /etc/postfix/dkim/signingtable
 
 grep -q "127.0.0.1" /etc/postfix/dkim/trustedhosts 2>/dev/null ||
 	echo "127.0.0.1
-10.1.0.0/16
-1.2.3.4/24" >> /etc/postfix/dkim/trustedhosts
+	10.1.0.0/16
+	1.2.3.4/24" >> /etc/postfix/dkim/trustedhosts
 
 # ...and source it from opendkim.conf
 grep -q "^KeyTable" /etc/opendkim.conf 2>/dev/null || echo "KeyTable file:/etc/postfix/dkim/keytable
@@ -287,7 +318,7 @@ $spfentry" > "$HOME/dns_emailwizard"
 
 echo "
 
- _   _
+_   _
 | \ | | _____      ___
 |  \| |/ _ \ \ /\ / (_)
 | |\  | (_) \ V  V / _
