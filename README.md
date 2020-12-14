@@ -1,6 +1,6 @@
 # Luke Bubar's Fork
 
-This is [Luke Bubar's](lukebubar.xyz) fork, where I am attempting to add Arch Support. It is not tested yet.
+This is [Luke Bubar's](https://lukebubar.xyz) fork, where I am attempting to add Arch Support. It is not tested yet.
 
 
 # Email server setup script
