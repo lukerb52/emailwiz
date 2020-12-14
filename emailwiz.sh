@@ -69,11 +69,11 @@ else
 	which opendkim-genkey >/dev/null 2>&1 || apt install opendkim-tools
 fi
 domain="$(cat /etc/mailname)"
-subdom="mail"
+subdom=${MAIL_SUBDOM:-mail}
 maildomain="$subdom.$domain"
 certdir="/etc/letsencrypt/live/$maildomain"
 
-[ ! -d "$certdir" ] && certdir="$(dirname "$(certbot certificates 2>/dev/null | grep "$maildomain" -A 2 | awk '/Certificate Path/ {print $3}')")"
+[ ! -d "$certdir" ] && certdir="$(dirname "$(certbot certificates 2>/dev/null | grep "$maildomain\|*.$domain" -A 2 | awk '/Certificate Path/ {print $3}' | head -n1)")"
 
 [ ! -d "$certdir" ] && echo "Note! You must first have a Let's Encrypt Certbot HTTPS/SSL Certificate for $maildomain.
 
@@ -97,6 +97,15 @@ postconf -e "smtpd_use_tls = yes"
 postconf -e "smtpd_tls_auth_only = yes"
 postconf -e "smtp_tls_security_level = may"
 postconf -e "smtp_tls_loglevel = 1"
+postconf -e "smtp_tls_CAfile=$certdir/cert.pem"
+postconf -e "smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
+postconf -e "smtp_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
+postconf -e "smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
+postconf -e "smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
+postconf -e "tls_preempt_cipherlist = yes"
+postconf -e "smtpd_tls_exclude_ciphers = aNULL, LOW, EXP, MEDIUM, ADH, AECDH, MD5,
+                            DSS, ECDSA, CAMELLIA128, 3DES, CAMELLIA256,
+                            RSA+AES, eNULL"
 
 # Here we tell Postfix to look to Dovecot for authenticating users/passwords.
 # Dovecot will be putting an authentication socket in /var/spool/postfix/private/auth
@@ -158,9 +167,13 @@ echo "# Dovecot config
 ssl = required
 ssl_cert = <$certdir/fullchain.pem
 ssl_key = <$certdir/privkey.pem
+ssl_min_protocol = TLSv1.2
+ssl_cipher_list = ALL:!RSA:!CAMELLIA:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!RC4:!SHA1:!SHA256:!SHA384:!LOW@STRENGTH
+ssl_prefer_server_ciphers = yes
 ssl_dh = </usr/share/dovecot/dh.pem
 # Plaintext login. This is safe and easy thanks to SSL.
 auth_mechanisms = plain login
+auth_username_format = %n
 
 protocols = \$protocols imap
 
@@ -238,17 +251,17 @@ cut -d: -f1 /etc/passwd | grep -q "^vmail" || useradd vmail
 chown -R vmail:vmail /var/lib/dovecot
 sievec /var/lib/dovecot/sieve/default.sieve
 
-echo "Preparing user authetication..."
+echo "Preparing user authentication..."
 grep -q nullok /etc/pam.d/dovecot ||
 	echo "auth    required        pam_unix.so nullok
 	account required        pam_unix.so" >> /etc/pam.d/dovecot
 
 # OpenDKIM
 
-# A lot of the big name email services, like Google, will automatically
-# rejectmark as spam unfamiliar and unauthenticated email addresses. As in, the
-# server will flattly reject the email, not even deliverring it to someone's
-# Spam folder.
+# A lot of the big name email services, like Google, will automatically reject
+# as spam unfamiliar and unauthenticated email addresses. As in, the server
+# will flatly reject the email, not even delivering it to someone's Spam
+# folder.
 
 # OpenDKIM is a way to authenticate your email so you can send to such services
 # without a problem.
@@ -265,7 +278,11 @@ chmod g+r /etc/postfix/dkim/*
 # Generate the OpenDKIM info:
 echo "Configuring OpenDKIM..."
 grep -q "$domain" /etc/postfix/dkim/keytable 2>/dev/null ||
+<<<<<<< HEAD
 	echo "$subdom._domainkey.$domain $domain:mail:/etc/postfix/dkim/mail.private" >> /etc/postfix/dkim/keytable
+=======
+echo "$subdom._domainkey.$domain $domain:$subdom:/etc/postfix/dkim/$subdom.private" >> /etc/postfix/dkim/keytable
+>>>>>>> b95fdd933456fdf5c25f12b82dbbe4476084c38e
 
 grep -q "$domain" /etc/postfix/dkim/signingtable 2>/dev/null ||
 	echo "*@$domain $subdom._domainkey.$domain" >> /etc/postfix/dkim/signingtable
@@ -317,8 +334,12 @@ $dmarcentry
 $spfentry" > "$HOME/dns_emailwizard"
 
 echo "
+<<<<<<< HEAD
 
 _   _
+=======
+ _   _
+>>>>>>> b95fdd933456fdf5c25f12b82dbbe4476084c38e
 | \ | | _____      ___
 |  \| |/ _ \ \ /\ / (_)
 | |\  | (_) \ V  V / _
