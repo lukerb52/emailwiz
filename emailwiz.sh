@@ -278,11 +278,7 @@ chmod g+r /etc/postfix/dkim/*
 # Generate the OpenDKIM info:
 echo "Configuring OpenDKIM..."
 grep -q "$domain" /etc/postfix/dkim/keytable 2>/dev/null ||
-<<<<<<< HEAD
-	echo "$subdom._domainkey.$domain $domain:mail:/etc/postfix/dkim/mail.private" >> /etc/postfix/dkim/keytable
-=======
 echo "$subdom._domainkey.$domain $domain:$subdom:/etc/postfix/dkim/$subdom.private" >> /etc/postfix/dkim/keytable
->>>>>>> b95fdd933456fdf5c25f12b82dbbe4476084c38e
 
 grep -q "$domain" /etc/postfix/dkim/signingtable 2>/dev/null ||
 	echo "*@$domain $subdom._domainkey.$domain" >> /etc/postfix/dkim/signingtable
@@ -334,12 +330,7 @@ $dmarcentry
 $spfentry" > "$HOME/dns_emailwizard"
 
 echo "
-<<<<<<< HEAD
-
-_   _
-=======
  _   _
->>>>>>> b95fdd933456fdf5c25f12b82dbbe4476084c38e
 | \ | | _____      ___
 |  \| |/ _ \ \ /\ / (_)
 | |\  | (_) \ V  V / _
