@@ -62,7 +62,7 @@ done
 echo "Installing programs..."
 if [ $distro -eq 1 ]
 then
-	pacman -S --noconfirm postfix dovecot opendkim spamassasin spamassasin-spamc
+	pacman -S --noconfirm postfix dovecot opendkim spamassassin spamassassin-spamc
 else
 	apt install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
 	# Check if OpenDKIM is installed and install it if not.
