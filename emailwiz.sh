@@ -138,7 +138,7 @@ echo "Configuring Postfix's master.cf..."
 
 sed -i "/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d" /etc/postfix/master.cf
 
-if [ $distro -eq 1]
+if [ $distro -eq 1 ]
 then
 	mkdir /etc/dovecot
 fi
