@@ -250,7 +250,7 @@ sieve_global_dir = /var/lib/dovecot/sieve/
 }
 " > /etc/dovecot/dovecot.conf
 
-mkdir /var/lib/dovecot/sieve/
+mkdir -p /var/lib/dovecot/sieve/
 
 echo "require [\"fileinto\", \"mailbox\"];
 if header :contains \"X-Spam-Flag\" \"YES\"
