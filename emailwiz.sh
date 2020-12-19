@@ -62,7 +62,8 @@ done
 echo "Installing programs..."
 if [ $distro -eq 1 ]
 then
-	pacman -S --noconfirm postfix dovecot opendkim spamassassin spamassassin-spamc
+	pacman -S --noconfirm postfix dovecot opendkim spamassassin
+	#spamassassin-spamc
 else
 	apt install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
 	# Check if OpenDKIM is installed and install it if not.
@@ -136,6 +137,11 @@ postconf -e "home_mailbox = Mail/Inbox/"
 echo "Configuring Postfix's master.cf..."
 
 sed -i "/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d" /etc/postfix/master.cf
+
+if [ $distro -eq 1]
+then
+	mkdir /etc/dovecot
+fi
 
 echo "smtp unix - - n - - smtp
 smtp inet n - y - - smtpd
