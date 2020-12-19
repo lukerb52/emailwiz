@@ -70,7 +70,7 @@ else
 fi
 if [ $distro -eq 1 ]
 then
-	domain="${hostname --fqdn}"
+	domain="$(hostname --fqdn)"
 else
 	domain="$(cat /etc/mailname)"
 fi
