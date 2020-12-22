@@ -39,11 +39,11 @@
 declare -i shell_check=0
 declare -i distro=0
 
-echo "What distribution is this system using?\n
-1) Arch (or Arch derivatives like Artix)\n
-2) Debian (or Debian derivatives like Ubuntu)\n"
+echo "What distribution is this system using?
+1) Arch (or Arch derivatives like Artix)
+2) Debian (or Debian derivatives like Ubuntu)"
 
-read distro
+read -i ">" distro
 
 while [ $shell_check -ne 1 ]
 do
@@ -59,11 +59,11 @@ done
 
 #---------------------
 
-echo "Installing programs...\n
-\n
-The `postfix` server sends mail\n
-The `dovecot` server recieves mail\n
-`opendkim` makes sure large email hosts won't block your email as spam\n
+echo "Installing programs...
+
+The `postfix` server sends mail
+The `dovecot` server recieves mail
+`opendkim` makes sure large email hosts won't block your email as spam
 `spamassasin` takes care of spam."
 if [ $distro -eq 1 ]
 then
