@@ -61,10 +61,10 @@ done
 
 echo "Installing programs...
 
-The `postfix` server sends mail
-The `dovecot` server recieves mail
-`opendkim` makes sure large email hosts won't block your email as spam
-`spamassasin` takes care of spam."
+The postfix server sends mail
+The dovecot server recieves mail
+opendkim makes sure large email hosts won't block your email as spam
+spamassasin takes care of spam."
 if [ $distro -eq 1 ]
 then
 	pacman -S postfix dovecot opendkim spamassassin
@@ -73,7 +73,7 @@ then
 	#domain="$(hostname --fqdn)"
 	echo "What is your hostname (ie, your email will be username@hostname) "
 	read domain
-	echo "What is your subdomain (`mail` reccomended)"
+	echo "What is your subdomain (/`mail/` reccomended)"
 	read subdom
 else
 	apt install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
