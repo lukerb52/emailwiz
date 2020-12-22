@@ -59,10 +59,15 @@ done
 
 #---------------------
 
-echo "Installing programs..."
+echo "Installing programs...\n
+\n
+The `postfix` server sends mail\n
+The `dovecot` server recieves mail\n
+`opendkim` makes sure large email hosts won't block your email as spam\n
+`spamassasin` takes care of spam."
 if [ $distro -eq 1 ]
 then
-	pacman -S --noconfirm postfix dovecot opendkim spamassassin
+	pacman -S postfix dovecot opendkim spamassassin
 	#spamassassin-spamc
 else
 	apt install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
@@ -71,7 +76,8 @@ else
 fi
 if [ $distro -eq 1 ]
 then
-	domain="$(hostname --fqdn)"
+	#domain="$(hostname --fqdn)"
+	read -i "What is your hostname (ie, your email will be username@hostname)" domain
 else
 	domain="$(cat /etc/mailname)"
 fi
