@@ -43,7 +43,7 @@ echo "What distribution is this system using?
 1) Arch (or Arch derivatives like Artix)
 2) Debian (or Debian derivatives like Ubuntu)"
 
-read -i ">" distro
+read  distro
 
 while [ $shell_check -ne 1 ]
 do
@@ -69,17 +69,17 @@ if [ $distro -eq 1 ]
 then
 	pacman -S postfix dovecot opendkim spamassassin
 	#spamassassin-spamc
+
+	#domain="$(hostname --fqdn)"
+	echo "What is your hostname (ie, your email will be username@hostname) "
+	read domain
+	echo "What is your subdomain (`mail` reccomended)"
+	read subdom
 else
 	apt install postfix dovecot-imapd dovecot-sieve opendkim spamassassin spamc
 	# Check if OpenDKIM is installed and install it if not.
 	which opendkim-genkey >/dev/null 2>&1 || apt install opendkim-tools
-fi
-if [ $distro -eq 1 ]
-then
-	#domain="$(hostname --fqdn)"
-	read -i "What is your hostname (ie, your email will be username@hostname) > " domain
-	read -i "What is your subdomain (`mail` reccomended) > " subdom
-else
+
 	domain="$(cat /etc/mailname)"
 	subdom=${MAIL_SUBDOM:-mail}
 fi
