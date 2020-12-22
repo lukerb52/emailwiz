@@ -77,11 +77,12 @@ fi
 if [ $distro -eq 1 ]
 then
 	#domain="$(hostname --fqdn)"
-	read -i "What is your hostname (ie, your email will be username@hostname)" domain
+	read -i "What is your hostname (ie, your email will be username@hostname) > " domain
+	read -i "What is your subdomain (`mail` reccomended) > " subdom
 else
 	domain="$(cat /etc/mailname)"
+	subdom=${MAIL_SUBDOM:-mail}
 fi
-subdom=${MAIL_SUBDOM:-mail}
 maildomain="$subdom.$domain"
 certdir="/etc/letsencrypt/live/$maildomain"
 
@@ -115,9 +116,7 @@ postconf -e "smtp_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
 postconf -e "smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
 postconf -e "smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1"
 postconf -e "tls_preempt_cipherlist = yes"
-postconf -e "smtpd_tls_exclude_ciphers = aNULL, LOW, EXP, MEDIUM, ADH, AECDH, MD5,
-DSS, ECDSA, CAMELLIA128, 3DES, CAMELLIA256,
-RSA+AES, eNULL"
+postconf -e "smtpd_tls_exclude_ciphers = aNULL, LOW, EXP, MEDIUM, ADH, AECDH, MD5, DSS, ECDSA, CAMELLIA128, 3DES, CAMELLIA256, RSA+AES, eNULL"
 
 # Here we tell Postfix to look to Dovecot for authenticating users/passwords.
 # Dovecot will be putting an authentication socket in /var/spool/postfix/private/auth
@@ -142,12 +141,16 @@ postconf -e "home_mailbox = Mail/Inbox/"
 
 echo "Configuring Postfix's master.cf..."
 
-sed -i "/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d" /etc/postfix/master.cf
-
 if [ $distro -eq 1 ]
 then
+	cp /etc/postfix/master.cf.proto /etc/postfix/master.cf
 	mkdir /etc/dovecot
+	spamdee="spamd"
+else
+	spamdee="debian-spamd"
 fi
+
+sed -i "/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d" /etc/postfix/master.cf
 
 echo "smtp unix - - n - - smtp
 smtp inet n - y - - smtpd
@@ -162,7 +165,7 @@ smtps     inet  n       -       y       -       -       smtpd
 -o smtpd_tls_wrappermode=yes
 -o smtpd_sasl_auth_enable=yes
 spamassassin unix -     n       n       -       -       pipe
-user=debian-spamd argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}" >> /etc/postfix/master.cf
+user=$spamdee argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}" >> /etc/postfix/master.cf
 
 
 # By default, dovecot has a bunch of configs in /etc/dovecot/conf.d/ These
